@@ -1,0 +1,17 @@
+[theme]
+# Force Streamlit to use a light base so Dark Mode doesn't override your yellow!
+base = "light"
+
+# "Donut Frosting Pink" for primary accents (buttons, sliders, selected tabs)
+primaryColor = "#F14A9C"
+
+# "Cloud White" for the main chart area background
+backgroundColor = "#FFFEF9"
+
+# "Simpsons Skin Yellow" for the sidebar
+secondaryBackgroundColor = "#FED41D"
+
+# Dark Gray for text to keep it highly readable
+textColor = "#333333"
+
+font = "sans serif"
