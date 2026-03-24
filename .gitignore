@@ -130,8 +130,6 @@ ENV/
 env.bak/
 venv.bak/
 
-# Streamlit
-.streamlit/
 
 # macOS
 .DS_Store
