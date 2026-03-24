@@ -328,7 +328,7 @@ col_view, col_weekday = st.columns(2,gap="large")
 
 with col_view:
     pink_subheader("Viewership evolution over time")
-    st.markdown("After Season 11, the measurement metric shifted from counting the total number of households to the number of individual people.")
+    st.markdown("*After Season 11, the measurement metric shifted from counting the total number of households to the number of individual people.*")
 
     # Layer 1: The Boxplots (Distribution)
     # Using extent='min-max' forces the whiskers to show the absolute highest and lowest 
