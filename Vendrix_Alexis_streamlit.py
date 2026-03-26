@@ -232,13 +232,13 @@ with col_rate:
  
 with col_correlation:
     corr_value = df['us_viewers_in_millions'].corr(df['imdb_rating'])
-    pink_subheader(f"Correlation analysis between ratings and viewers")
+    pink_subheader(f"Correlation between ratings and viewers")
     #st.markdown("*Comment:*")
     
     # Base Chart: Establish the X and Y axes that all subsequent layers will share.
     # Locking the Y-axis domain [4, 10] prevents empty space, as IMDb ratings rarely drop below 4.
     base_scatter = alt.Chart(df).encode(
-        x=alt.X('us_viewers_in_millions:Q', title='Viewers (Millions)'),
+        x=alt.X('us_viewers_in_millions:Q', title='Viewers (M)'),
         y=alt.Y('imdb_rating:Q', title='IMDB Rating', scale=alt.Scale(domain=[4, 10]))
     )
     # Layer 1: The Data Points (Scatter)
@@ -268,7 +268,7 @@ with col_correlation:
     text_df = pd.DataFrame({
         'x': [df['us_viewers_in_millions'].max()],
         'y': [9.5], 
-        'label': [f"r = {corr_value:.2f}"]
+        'label': [f"corr = {corr_value*100:.0f}%"]
     })
     
     # text mark with correlation value
@@ -339,7 +339,7 @@ with col_view:
 
     # Color encoding groups the data into 'Households' vs 'Individuals'
     bp_viewers = base_boxplot_viewers.mark_boxplot(extent='min-max').encode(
-        y=alt.Y('us_viewers_in_millions:Q', title='Viewers (Millions)'),
+        y=alt.Y('us_viewers_in_millions:Q', title='Viewers (M)'),
         color=alt.Color(
             'viewers_type:N', 
             title='Viewers Type', 
@@ -376,7 +376,7 @@ with col_view:
 
 
 # ====================================================================================
-# 7.2.2 Viewers by Airing Weekday
+# 7.2.2 Viewers by airing weekday
 # ====================================================================================
 
 # Chart Choice (Bar Chart): 
@@ -411,18 +411,24 @@ with col_weekday:
     # rare special airings with mathematically misleading averages due to tiny sample sizes.
     main_days = ['Thursday', 'Sunday']
     df_main_days = df[df['weekday_name'].isin(main_days)]
-    pink_subheader("Viewers by Airing Weekday")
+    pink_subheader("Average number of viewers by airing weekday")
     #st.markdown("*Comment:*")
 
     # Categorical Sorting: Forcing chronological order instead of alphabetical
     weekday_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
     # Layer 1: The Base Bar Chart
-    # Uses a clean teal color (#2ec4b6).
-    # labelAngle=0 keeps the weekday names perfectly flat on the X-axis.
-    chart4 = alt.Chart(df_main_days).mark_bar(color="#2ec4b6").encode(
+    chart4_bar = alt.Chart(df_main_days).mark_bar(color="#2ec4b6").encode(
         x=alt.X('weekday_name:N', title=None, axis=alt.Axis(labelAngle=0), sort=weekday_order),
-        y=alt.Y('mean(us_viewers_in_millions):Q', title='Avg Viewers (Millions)'),
+        y=alt.Y('mean(us_viewers_in_millions):Q', 
+                #title='Avg Viewers (Millions)', 
+                title=None,
+                axis=alt.Axis(
+                    labels=False,  # Hides the numbers
+                    ticks=False,   # Hides the little tick marks
+                    domain=False,  # Hides the solid vertical line on the left
+                    grid=False      # Keeps the horizontal background lines!
+                )),
 
         
         tooltip=[
@@ -433,20 +439,30 @@ with col_weekday:
     )
 
     # Layer 2: Direct Data Labels
-    # We reuse the base chart but change the mark to Text.
-    # dy=72 pushes the text perfectly down INSIDE the top of the teal bar.
-    chart4_text = chart4.mark_text(
+    base = alt.Chart(df_main_days).transform_aggregate(
+    mean_viewers='mean(us_viewers_in_millions)',
+    ep_count='count()',
+    groupby=['weekday_name']
+    ).transform_calculate(
+        label_text="format(datum.mean_viewers, '.1f') + ' M'" 
+    )
+
+    chart4_text = base.mark_text(
         align="center",
         baseline="bottom",
         dy=72, 
         color="#FFFFFF",
         fontSize=48,
-        fontWeight="bold"
+        fontWeight="bold"   
     ).encode(
-        text=alt.Text("mean(us_viewers_in_millions):Q", format=".1f") # Formats to 1 decimal place
+        x=alt.X('weekday_name:N', sort=weekday_order),
+        y=alt.Y('mean_viewers:Q'),
+        text=alt.Text('label_text:N')
     )
+
+
     # Combine and Configure: Layer the bars and text, apply global font sizing  
-    final_bar_chart=(chart4 + chart4_text).properties(height=360
+    final_bar_chart=(chart4_bar + chart4_text).properties(height=400
     ).configure_axis(
     labelFontSize=16, # The numbers/ticks on the axes
     titleFontSize=18  # The main axis titles
@@ -484,7 +500,7 @@ with col_weekday:
 # without having to read every specific number.
 
 
-pink_subheader("Viewership Patterns per Season")
+pink_subheader("Viewership patterns per season")
 st.markdown("*The trend represents the average change in viewers (in millions) per episode in a season*")
 
 # 1. Composite Layout Setup
@@ -544,6 +560,7 @@ with col_heat:
         ),
         tooltip=[
             alt.Tooltip('season:N', title='Season number'),
+            alt.Tooltip('number_in_season:N', title='Episode number'),
             alt.Tooltip('us_viewers_in_millions:Q', title='Viewers (M)', format='.2f'),
             alt.Tooltip('title:N', title='Episode Title') 
         ]

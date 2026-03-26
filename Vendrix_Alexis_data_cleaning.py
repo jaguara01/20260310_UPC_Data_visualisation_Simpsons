@@ -18,6 +18,10 @@ def clean_data(input_path, output_path):
     df['original_air_date'] = pd.to_datetime(df['original_air_date'], errors='coerce')
     
     # Extract weekday and other date components
+
+    df['week_number'] = df['original_air_date'].dt.isocalendar().week
+    df['week_number'] = df['week_number'].astype(int)
+    
     # Monday=0, Sunday=6
     df['weekday_num'] = df['original_air_date'].dt.weekday
     # Full weekday name
